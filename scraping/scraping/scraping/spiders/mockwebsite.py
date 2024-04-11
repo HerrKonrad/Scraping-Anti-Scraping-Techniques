@@ -60,11 +60,11 @@ class MockwebsiteSpider(scrapy.Spider):
                 sel = Selector(text=html_content)
                 rows = sel.css("tbody tr")
                 for row in rows:
-                    car_make = row.css("td:nth-child(1)::text").get()
-                    car_model = row.css("td:nth-child(2)::text").get()
-                    price = row.css("td:nth-child(3)::text").get()
-                    car_vin = row.css("td:nth-child(4)::text").get()
-                    car_color = row.css("td:nth-child(5)::text").get()
+                    car_make = ''.join(row.css("td:nth-child(1) div span::text").getall())
+                    car_model = ''.join(row.css("td:nth-child(2) div  span::text").getall())
+                    price = ''.join(row.css("td:nth-child(3) div  span::text").getall())
+                    car_vin = ''.join(row.css("td:nth-child(4) div  span::text").getall())
+                    car_color = ''.join(row.css("td:nth-child(5) div  span::text").getall())
 
                     car = {
                         "make": car_make,
@@ -84,6 +84,5 @@ class MockwebsiteSpider(scrapy.Spider):
                     next_button.click()
                 else:
                     finished = True
-
 
         pass

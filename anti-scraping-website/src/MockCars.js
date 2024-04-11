@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { Table, Container, Pagination, Button } from 'react-bootstrap';
-
+import {  useDispatch } from 'react-redux'; 
 import { useEffect } from 'react';
+import { fetchData } from './reducers'; 
+import './hide.css'
+
+
 
 
 const MockCars = ({ cars }) => {
+
     const [currentPage, setCurrentPage] = useState(1);
     const [carsPerPage] = useState(10);
+    const dispatch = useDispatch(); // Obtém a função de despacho de ações do Redux
   
     useEffect(() => {
       setCurrentPage(1); // Reset to first page when cars change
@@ -16,15 +22,21 @@ const MockCars = ({ cars }) => {
     const indexOfLastCar = currentPage * carsPerPage;
     const indexOfFirstCar = indexOfLastCar - carsPerPage;
     const currentCars = cars.slice(indexOfFirstCar, indexOfLastCar);
+ 
+      dispatch(fetchData(currentCars));
   
     // Change page
     const paginate = (pageNumber) => {
       if (pageNumber > 0 && pageNumber <= Math.ceil(cars.length / carsPerPage)) {
         setCurrentPage(pageNumber);
+        
       }
     };
+
+   
   
     return (
+      
       <Container className="mt-5">
         <Table striped bordered hover responsive>
           <thead>
@@ -48,7 +60,6 @@ const MockCars = ({ cars }) => {
             ))}
           </tbody>
         </Table>
-  
         <div className="d-flex justify-content-center mt-3">
           <Pagination>
             <Button className="previouspage" variant="secondary" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
@@ -69,6 +80,7 @@ const MockCars = ({ cars }) => {
           </Pagination>
         </div>
       </Container>
+      
     );
   };
   
