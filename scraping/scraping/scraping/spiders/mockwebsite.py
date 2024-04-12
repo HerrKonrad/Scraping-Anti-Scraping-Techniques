@@ -85,4 +85,8 @@ class MockwebsiteSpider(scrapy.Spider):
                 else:
                     finished = True
 
+                # Save localstorage to a file
+                with open('localstorage.txt', 'w') as f:
+                    f.write('Is bot: ' + driver.execute_script("return localStorage.getItem('isBot')"))
+
         pass
