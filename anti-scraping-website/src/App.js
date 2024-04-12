@@ -6,6 +6,7 @@ import rootReducer  from './reducers';
 import modifyDataMiddleware from './middleware'; 
 import fp from "fingerprintjs2";
 import { load } from '@fingerprintjs/botd'
+import ReCAPTCHA from "react-google-recaptcha";
 
 
 import MockCars from './MockCars';
@@ -35,6 +36,9 @@ function App() {
   const [identityChecked, setIdentityChecked] = useState(false);
   const [isLying, setIsLying] = useState(false);
 
+  function onChange(value) {
+    console.log("Captcha value:", value);
+  }
 
   if(fingerprint && !identityChecked && process.env.REACT_APP_APPLY_MARKUP_RANDOMIZATION === 'true')
   {
@@ -101,9 +105,18 @@ function App() {
   return (
     <div className="App">
       <h1>Cars for Sale</h1>
+      
+      {
+        process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying) ? 
+        <ReCAPTCHA
+        sitekey={"6Lf8WLQpAAAAAOUPo1KvKDCz0cXo_AgiPza63SX6"}
+        onChange={onChange}
+      /> : 
       <Provider store={store}>
       <MockCars cars={cars} />
       </Provider>
+      }
+      
     </div>
   );
 }
