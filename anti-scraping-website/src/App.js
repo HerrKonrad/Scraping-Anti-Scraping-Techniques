@@ -4,10 +4,10 @@ import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux'; 
 import rootReducer  from './reducers'; 
 import modifyDataMiddleware from './middleware'; 
-import fp from "fingerprintjs2";
+import fp, { get } from "fingerprintjs2";
 import { load } from '@fingerprintjs/botd'
 import ReCAPTCHA from "react-google-recaptcha";
-
+import axios from "axios";
 
 import MockCars from './MockCars';
 import React, { useState, useEffect } from 'react';
@@ -35,12 +35,33 @@ function App() {
   const [isBot, setIsBot] = useState();
   const [identityChecked, setIdentityChecked] = useState(false);
   const [isLying, setIsLying] = useState(false);
+  const [ip, setIP] = useState("");
+
+  const getIpAddress = async () => {
+    if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
+    { const res = await axios.get("https://api.ipify.org/?format=json");
+    if(res.data.ip !== null || res.data.ip !== undefined || res.data.ip !== '')
+    setIP(res.data.ip);
+    localStorage.setItem('ip', res.data.ip);
+    }
+  };
 
   function onChange(value) {
     console.log("Captcha value:", value);
+    let captcha = value
+    if(captcha === null || captcha === undefined || captcha === ''){
+      console.log('Captcha client submit was unsuccessful')
+      return;
+    }
+    else
+    {
+      console.log('Captcha client submit was successful')
+
+    }
+
   }
 
-  if(fingerprint && !identityChecked && process.env.REACT_APP_APPLY_MARKUP_RANDOMIZATION === 'true')
+  if(fingerprint && !identityChecked && process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
   {
     // Get fingerprint then check if user is lying about browser
     getFingerprint()
@@ -71,6 +92,8 @@ function App() {
           setIsLying(true);
           console.log('User is lying identity')
           localStorage.setItem('isLying', true);
+          // If User is lying or is a bot, we should send to our server the user hash and IP
+          // to blacklist them temporarily, obligating the IP or Hash to solve a captcha
         }
     });
     });
@@ -99,7 +122,7 @@ function App() {
   useEffect(() => {
     setCars(carJson);
     setFingerprint(process.env.REACT_APP_APPLY_FINGERPRINTING || false);
-
+    getIpAddress();
   }, [carJson, cars]);
 
   return (
@@ -109,7 +132,7 @@ function App() {
       {
         process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying) ? 
         <ReCAPTCHA
-        sitekey={"6Lf8WLQpAAAAAOUPo1KvKDCz0cXo_AgiPza63SX6"}
+        sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
         onChange={onChange}
       /> : 
       <Provider store={store}>

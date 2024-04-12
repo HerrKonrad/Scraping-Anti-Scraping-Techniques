@@ -60,7 +60,8 @@ class MockwebsiteSpider(scrapy.Spider):
                 sel = Selector(text=html_content)
                 rows = sel.css("tbody tr")
                 for row in rows:
-                    car_make = ''.join(row.css("td:nth-child(1) div span::text").getall())
+                    # Car make will bypass the hidden span element
+                    car_make = ''.join(row.css("td:nth-child(1) div span:not(.hide)::text").getall())
                     car_model = ''.join(row.css("td:nth-child(2) div  span::text").getall())
                     price = ''.join(row.css("td:nth-child(3) div  span::text").getall())
                     car_vin = ''.join(row.css("td:nth-child(4) div  span::text").getall())
@@ -85,8 +86,11 @@ class MockwebsiteSpider(scrapy.Spider):
                 else:
                     finished = True
 
+            try:
                 # Save localstorage to a file
                 with open('localstorage.txt', 'w') as f:
                     f.write('Is bot: ' + driver.execute_script("return localStorage.getItem('isBot')"))
+            except Exception as e:
+                print(e)
 
         pass

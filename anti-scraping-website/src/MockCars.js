@@ -13,17 +13,39 @@ const MockCars = ({ cars }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [carsPerPage] = useState(10);
     const dispatch = useDispatch(); // Obtém a função de despacho de ações do Redux
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+        setCurrentPage(1); // Reset page number when search term changes
+    };
   
     useEffect(() => {
       setCurrentPage(1); // Reset to first page when cars change
     }, [cars]);
-  
+
+
+    const filteredCars = cars.filter(car => {
+      const searchTermLowerCase = searchTerm.toString().toLowerCase(); // Ensure searchTerm is a string before applying toLowerCase()
+
+      if (searchTermLowerCase === '') {
+        return true; // Return all cars if searchTerm is empty
+      }
+      console.log(car.car_make)
+      return (car.car_make.toString().toLowerCase().includes(searchTermLowerCase)) ||
+             (car.car_model.toString().toLowerCase().includes(searchTermLowerCase)) ||
+             (car.car_vin.toString().toLowerCase().includes(searchTermLowerCase)) ||
+             (car.car_color.toString().toLowerCase().includes(searchTermLowerCase));
+    });
+    
     // Get current cars
     const indexOfLastCar = currentPage * carsPerPage;
     const indexOfFirstCar = indexOfLastCar - carsPerPage;
-    const currentCars = cars.slice(indexOfFirstCar, indexOfLastCar);
- 
-      dispatch(fetchData(currentCars));
+    const currentCars = filteredCars.slice(indexOfFirstCar, indexOfLastCar)
+
+
+    dispatch(fetchData(currentCars));
   
     // Change page
     const paginate = (pageNumber) => {
@@ -33,11 +55,17 @@ const MockCars = ({ cars }) => {
       }
     };
 
-   
-  
     return (
       
       <Container className="mt-5">
+          <div>
+                <input 
+                    type="text" 
+                    placeholder="Search" 
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                />
+            </div>
         <Table striped bordered hover responsive>
           <thead>
             <tr>
