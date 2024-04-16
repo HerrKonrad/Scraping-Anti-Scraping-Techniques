@@ -8,6 +8,7 @@ import fp, { get } from "fingerprintjs2";
 import { load } from '@fingerprintjs/botd'
 import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MockCars from './MockCars';
 import React, { useState, useEffect } from 'react';
@@ -35,6 +36,7 @@ function App() {
   const [isBot, setIsBot] = useState();
   const [identityChecked, setIdentityChecked] = useState(false);
   const [isLying, setIsLying] = useState(false);
+  const [filledHoneypot, setFilledHoneypot] = useState(false);
   const [ip, setIP] = useState("");
 
   const getIpAddress = async () => {
@@ -120,6 +122,9 @@ function App() {
   );
 
   useEffect(() => {
+    const honeypot = (localStorage.getItem('honeypot_filled') === 'true') || false;
+    setFilledHoneypot(honeypot);
+    console.log('Honeypot filled: ' + honeypot);
     setCars(carJson);
     setFingerprint(process.env.REACT_APP_APPLY_FINGERPRINTING || false);
     getIpAddress();
@@ -127,10 +132,17 @@ function App() {
 
   return (
     <div className="App">
+    <BrowserRouter>
+      <Routes>
+        <Route path="/fake-page-1" element={<div>Ops... You're a bot!!!</div>} />
+        <Route path="/fake-page-2" element={<div>Ops... You're a bot!!!</div>} />
+        <Route path="/fake-page-3" element={<div>Ops... You're a bot!!</div>} />
+       </Routes> 
+      </BrowserRouter>
       <h1>Cars for Sale</h1>
       
       {
-        process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying) ? 
+        process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying || filledHoneypot) ? 
         <ReCAPTCHA
         sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
         onChange={onChange}

@@ -20,6 +20,11 @@ const MockCars = ({ cars }) => {
         setSearchTerm(event.target.value);
         setCurrentPage(1); // Reset page number when search term changes
     };
+
+    const handleHoneyPot = (event) => {
+      localStorage.setItem('honeypot_filled', 'true') 
+      window.location.reload()
+    }
   
     useEffect(() => {
       setCurrentPage(1); // Reset to first page when cars change
@@ -58,55 +63,107 @@ const MockCars = ({ cars }) => {
     return (
       
       <Container className="mt-5">
-          <div>
-                <input 
-                    type="text" 
-                    placeholder="Search" 
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                />
-            </div>
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Car Make</th>
-              <th>Car Model</th>
-              <th>Price</th>
-              <th>Car VIN</th>
-              <th>Color</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentCars.map((car, index) => (
-              <tr key={index}>
-                <td>{car.car_make}</td>
-                <td>{car.car_model}</td>
-                <td>{car.car_price}</td>
-                <td>{car.car_vin}</td>
-                <td>{car.car_color}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-        <div className="d-flex justify-content-center mt-3">
-          <Pagination>
-            <Button className="previouspage" variant="secondary" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
-              Previous
-            </Button>
-            {Array.from({ length: Math.ceil(cars.length / carsPerPage) }, (_, index) => (
-              <Button
-                key={index}
-                variant={index + 1 === currentPage ? 'primary' : 'secondary'}
-                onClick={() => paginate(index + 1)}
-              >
-                {index + 1}
-              </Button>
-            ))}
-            <Button className="nextpage" variant="secondary" disabled={currentPage === Math.ceil(cars.length / carsPerPage)} onClick={() => paginate(currentPage + 1)}>
-              Next
-            </Button>
-          </Pagination>
+        <div>
+          <input 
+            type="text" 
+            placeholder="Search" 
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
         </div>
+        <div>
+          <input
+          type="text"
+          placeholder="Search"
+          value={searchTerm}
+          onChange={handleHoneyPot}
+          className="hide"
+          />
+        </div>
+      <Table striped bordered hover responsive>
+        <thead>
+        <tr>
+          <th>Car Make</th>
+          <th>Car Model</th>
+          <th>Price</th>
+          <th>Car VIN</th>
+          <th>Color</th>
+        </tr>
+        </thead>
+        <tbody>
+        {currentCars.map((car, index) => (
+          <tr key={index}>
+          <td>{car.car_make}</td>
+          <td>{car.car_model}</td>
+          <td>{car.car_price}</td>
+          <td>{car.car_vin}</td>
+          <td>{car.car_color}</td>
+          </tr>
+        ))}
+        </tbody>
+      </Table>
+      <div className="d-flex justify-content-center mt-3">
+        <Pagination>
+        <Button className="previouspage" variant="secondary" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
+          Previous
+        </Button>
+        
+        {Array.from({ length: Math.ceil(cars.length / carsPerPage) }, (_, index) => (
+            <>
+              {currentPage > 1 && process.env.REACT_APP_APPLY_HONEYPOT === 'true' ? (
+                <Button
+                  key={index}
+                  variant={index + 1 === currentPage ? 'primary' : 'secondary'}
+                  onClick={() => paginate(index + 1)}
+                  
+                >
+                  {index + 1}
+                </Button>
+              ) : (
+                <Button
+                  key={index}
+                  variant={index + 1 === currentPage ? 'primary' : 'secondary'}
+                  onClick={() => paginate(index + 1)}
+                >
+                  {index + 1}
+                </Button>
+              )}
+            </>
+          ))}
+
+         
+       
+        {
+          currentPage > 1 && process.env.REACT_APP_APPLY_HONEYPOT === 'true' ?
+          <div>
+          <Button className="nextpage_real" variant="secondary" disabled={currentPage === Math.ceil(cars.length / carsPerPage)} onClick={() => paginate(currentPage + 1)}>
+            Next
+          </Button>
+          
+          <Button className="nextpage" variant="secondary" style={{
+            position: 'absolute',
+            top: '1px', 
+            left: '1px', 
+            padding: '0.5em 0.5em',
+            border: 'none',
+            opacity: '0',
+            fontSize: '0.1em',
+            textTransform: 'lowercase',
+            cursor: 'default',
+          }} onClick={() => handleHoneyPot()  }>
+           
+          </Button> 
+          </div>
+          :
+          <div>
+          <Button className="nextpage" variant="secondary" disabled={currentPage === Math.ceil(cars.length / carsPerPage)} onClick={() => paginate(currentPage + 1)}>
+          Next
+          </Button>
+          </div>
+        }
+        
+        </Pagination>
+      </div>
       </Container>
       
     );

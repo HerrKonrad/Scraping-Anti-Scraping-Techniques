@@ -90,6 +90,7 @@ class MockwebsiteSpider(scrapy.Spider):
                 # Save localstorage to a file
                 with open('localstorage.txt', 'w') as f:
                     f.write('Is bot: ' + driver.execute_script("return localStorage.getItem('isBot')"))
+                    f.write('Honeypot filled: ' + driver.execute_script("return localStorage.getItem('honeypot_filled')"))
             except Exception as e:
                 print(e)
 
