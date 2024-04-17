@@ -91,13 +91,25 @@ const MockCars = ({ cars }) => {
         </tr>
         </thead>
         <tbody>
+          
+        {process.env.REACT_APP_APPLY_HONEYPOT === 'true' && (
+  <tr key={0} style={{ display: 'none' }} onClick={() => window.location.href = '/fake-page-1'}>
+    <td><div><span></span></div></td>
+    <td><div><span></span></div></td>
+    <td><div><span></span></div></td>
+    <td><div><span></span></div></td>
+    <td><div><span></span></div></td>
+    <td><div><span><a href={'/fake-page-1'}>More info</a></span></div></td>
+  </tr>
+)}
         {currentCars.map((car, index) => (
           <tr key={index}>
-          <td>{car.car_make}</td>
-          <td>{car.car_model}</td>
-          <td>{car.car_price}</td>
-          <td>{car.car_vin}</td>
-          <td>{car.car_color}</td>
+            <td>{car.car_make}</td>
+            <td>{car.car_model}</td>
+            <td>{car.car_price}</td>
+            <td>{car.car_vin}</td>
+            <td>{car.car_color}</td>
+            <td><a href={'/' + index}>More info</a></td>
           </tr>
         ))}
         </tbody>

@@ -7,6 +7,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from scrapy.utils.response import open_in_browser
 
 
 
@@ -62,11 +63,13 @@ class MockwebsiteSpider(scrapy.Spider):
                 for row in rows:
                     # Car make will bypass the hidden span element
                     car_make = ''.join(row.css("td:nth-child(1) div span:not(.hide)::text").getall())
-                    car_model = ''.join(row.css("td:nth-child(2) div  span::text").getall())
-                    price = ''.join(row.css("td:nth-child(3) div  span::text").getall())
-                    car_vin = ''.join(row.css("td:nth-child(4) div  span::text").getall())
-                    car_color = ''.join(row.css("td:nth-child(5) div  span::text").getall())
-
+                    car_model = ''.join(row.css("td:nth-child(2) div span::text").getall())
+                    price = ''.join(row.css("td:nth-child(3) div span::text").getall())
+                    car_vin = ''.join(row.css("td:nth-child(4) div span::text").getall())
+                    car_color = ''.join(row.css("td:nth-child(5) div span::text").getall())
+                    car_page = ''.join(row.css("td:nth-child(6) a::attr(href)").getall())
+                    # Go to the car page for getting more info
+                    driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
                     car = {
                         "make": car_make,
                         "model": car_model,
@@ -75,6 +78,7 @@ class MockwebsiteSpider(scrapy.Spider):
                         "color": car_color,
                     }
                     yield car
+                    
                 # Find the next button element
                 next_button = driver.find_element(By.CSS_SELECTOR, "button.nextpage.btn.btn-secondary")
 

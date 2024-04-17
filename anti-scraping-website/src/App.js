@@ -9,6 +9,7 @@ import { load } from '@fingerprintjs/botd'
 import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HoneypotPage  from './honeypot';
 
 import MockCars from './MockCars';
 import React, { useState, useEffect } from 'react';
@@ -38,6 +39,7 @@ function App() {
   const [isLying, setIsLying] = useState(false);
   const [filledHoneypot, setFilledHoneypot] = useState(false);
   const [ip, setIP] = useState("");
+
 
   const getIpAddress = async () => {
     if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
@@ -134,26 +136,44 @@ function App() {
     <div className="App">
     <BrowserRouter>
       <Routes>
-        <Route path="/fake-page-1" element={<div>Ops... You're a bot!!!</div>} />
+        <Route path="/fake-page-1" element={<HoneypotPage />} />
         <Route path="/fake-page-2" element={<div>Ops... You're a bot!!!</div>} />
         <Route path="/fake-page-3" element={<div>Ops... You're a bot!!</div>} />
+        <Route path="/:carId" element={<div>Car Page</div>} />
+        <Route path="/" element={<HomePage 
+          isBot={isBot}
+          isLying={isLying}
+          filledHoneypot={filledHoneypot}
+          onChange={onChange}
+          store={store}
+          cars={cars}
+        />} />
+        
        </Routes> 
       </BrowserRouter>
-      <h1>Cars for Sale</h1>
-      
-      {
-        process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying || filledHoneypot) ? 
-        <ReCAPTCHA
-        sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-        onChange={onChange}
-      /> : 
-      <Provider store={store}>
-      <MockCars cars={cars} />
-      </Provider>
-      }
-      
     </div>
   );
 }
+
+const HomePage = ({isBot, isLying, filledHoneypot, onChange, store, cars}) => {
+  return (
+    <div>
+      <div>
+          <h1>Cars for Sale</h1>
+             {process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying || filledHoneypot) ? 
+             <ReCAPTCHA
+             sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+             onChange={onChange}
+           /> : 
+           <Provider store={store}>
+           <MockCars cars={cars} />
+           </Provider>}
+          </div>
+    </div>
+  );
+};
+
+
+
 
 export default App;
