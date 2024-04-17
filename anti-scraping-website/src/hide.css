@@ -1,0 +1,32 @@
+span.hide {
+    display: none;
+
+}
+
+div.hide {
+    display: none;
+}
+
+tr.hide {
+    display: none;
+}
+
+input.hide {
+    display: none;
+}
+
+button.hide {
+    display: none;
+}
+
+.botao-minusculo {
+    position: absolute;
+    top: 1px; 
+    left: 1px; 
+    padding: 0.01em 0.01em;
+    border: none;
+    opacity: 0;
+    font-size: 0.1em;
+    text-transform: lowercase;
+    cursor: default;
+}

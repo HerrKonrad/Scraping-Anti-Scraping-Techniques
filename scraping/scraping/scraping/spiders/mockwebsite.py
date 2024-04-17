@@ -7,6 +7,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from scrapy.utils.response import open_in_browser
 
 
 
@@ -60,12 +61,15 @@ class MockwebsiteSpider(scrapy.Spider):
                 sel = Selector(text=html_content)
                 rows = sel.css("tbody tr")
                 for row in rows:
-                    car_make = row.css("td:nth-child(1)::text").get()
-                    car_model = row.css("td:nth-child(2)::text").get()
-                    price = row.css("td:nth-child(3)::text").get()
-                    car_vin = row.css("td:nth-child(4)::text").get()
-                    car_color = row.css("td:nth-child(5)::text").get()
-
+                    # Car make will bypass the hidden span element
+                    car_make = ''.join(row.css("td:nth-child(1) div span:not(.hide)::text").getall())
+                    car_model = ''.join(row.css("td:nth-child(2) div span::text").getall())
+                    price = ''.join(row.css("td:nth-child(3) div span::text").getall())
+                    car_vin = ''.join(row.css("td:nth-child(4) div span::text").getall())
+                    car_color = ''.join(row.css("td:nth-child(5) div span::text").getall())
+                    car_page = ''.join(row.css("td:nth-child(6) a::attr(href)").getall())
+                    # Go to the car page for getting more info
+                    driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
                     car = {
                         "make": car_make,
                         "model": car_model,
@@ -74,6 +78,7 @@ class MockwebsiteSpider(scrapy.Spider):
                         "color": car_color,
                     }
                     yield car
+                    
                 # Find the next button element
                 next_button = driver.find_element(By.CSS_SELECTOR, "button.nextpage.btn.btn-secondary")
 
@@ -85,5 +90,12 @@ class MockwebsiteSpider(scrapy.Spider):
                 else:
                     finished = True
 
+            try:
+                # Save localstorage to a file
+                with open('localstorage.txt', 'w') as f:
+                    f.write('Is bot: ' + driver.execute_script("return localStorage.getItem('isBot')"))
+                    f.write('Honeypot filled: ' + driver.execute_script("return localStorage.getItem('honeypot_filled')"))
+            except Exception as e:
+                print(e)
 
         pass
