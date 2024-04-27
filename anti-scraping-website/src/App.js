@@ -30,7 +30,7 @@ function App() {
   const [ip, setIP] = useState("");
   const [captchaSolved, setCaptchaSolved] = useState(false);
   const [captchaRequired, setCaptchaRequired] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
 
 
 const [fingerprintHash, setFingerprintHash] = useState('');
@@ -167,7 +167,11 @@ new Promise(resolve => {
     .then(res => {
       
       if(res.data.success === true)
-      setCars(res.data.data);
+      {
+        setCars(res.data.data);
+        setIsLoading(false);
+      }
+
       else
       console.log('Failed to fetch data: ' + res.data.message);
     }).catch(err => {
@@ -201,6 +205,9 @@ new Promise(resolve => {
           store={store}
           cars={cars}
           captchaRequired={captchaRequired}
+          isLoading={isLoading}
+          ip={ip}
+          hash={fingerprintHash}
         />} />
         
        </Routes> 
@@ -209,20 +216,31 @@ new Promise(resolve => {
   );
 }
 
-const HomePage = ({isBot, isLying, filledHoneypot, onChange, store, cars, captchaRequired}) => {
+const HomePage = ({ onChange, store, cars, captchaRequired, isLoading, ip, hash }) => {
   return (
     <div>
       <div>
-          <h1>Cars for Sale</h1>
-             {process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (captchaRequired) ? 
-             <ReCAPTCHA
-             sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-             onChange={onChange}
-           /> : 
-           <Provider store={store}>
-           <MockCars cars={cars} />
-           </Provider>}
-          </div>
+        <h1>Cars for Sale</h1>
+        {isLoading ? (
+          <div className="spinner-border" role="status"></div>
+        ) : (
+          process.env.REACT_APP_APPLY_CAPTCHA === 'true' && captchaRequired ? (
+            <div>
+              <span>A suspicious behavior was detected. Complete the CAPTCHA to access the page</span>
+              <br></br>
+              <span>Your IP Address: {ip} </span>
+              <br></br>
+              <span>Your Canvas Fingerprint Hash: {hash}</span>
+            <ReCAPTCHA sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY} onChange={onChange} />
+            </div>
+          ) : (
+            <Provider store={store}>
+              <MockCars cars={cars} />
+            </Provider>
+          )
+        )}
+      </div>
+     
     </div>
   );
 };
