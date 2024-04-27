@@ -14,6 +14,8 @@ import HoneypotPage  from './honeypot';
 import MockCars from './MockCars';
 import React, { useState, useEffect } from 'react';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'
+
 
 export const getFingerprint = () =>
   new Promise(resolve => {
@@ -148,7 +150,7 @@ function App() {
     let ban_request = (isBot || isLying || filledHoneypot) ? 'true' : 'false';
     
     const captchaToken = localStorage.getItem('captcha') || '';
-    axios.get('http://localhost:5000/cars', {
+    axios.get(API_URL + '/cars', {
       headers: {
         'fingerprint': localStorage.getItem('fingerprint_hash') || '',
         'banrequest': ban_request,
