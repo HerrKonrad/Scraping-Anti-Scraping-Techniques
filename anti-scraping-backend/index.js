@@ -5,6 +5,7 @@ const NodeCache = require("node-cache");
 const {RecaptchaEnterpriseServiceClient} = require('@google-cloud/recaptcha-enterprise');
 const blacklistCache = new NodeCache();
 const captchaListCache = new NodeCache();
+const requestIp = require('request-ip')
 const app = express();
 app.use(cors())
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
@@ -20,11 +21,8 @@ const BAN_TIME = process.env.BAN_TIME || 60;
 // Define your routes here
 
 const userIdentifyVerification = (req, res, next) => {
-    var ip = req.ip 
-            || req.connection.remoteAddress 
-            || req.socket.remoteAddress 
-            || req.connection.socket.remoteAddress;
-            ip = ip.replace('::ffff:', '');
+    var ip = requestIp.getClientIp(req)
+    ip = ip.replace('::ffff:', '');
     console.log(`Request IP: ${ip}`);
 
     var hash = req.headers['fingerprint'] || ''

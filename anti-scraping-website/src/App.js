@@ -17,22 +17,10 @@ import React, { useState, useEffect } from 'react';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
 
-export const getFingerprint = () =>
-  new Promise(resolve => {
-    if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
-    {
-      fp.get(components => {
-        var values = components.map(function (component) { return component.value })
-        var murmur = fp.x64hash128(values.join(''), 31)
-        localStorage.setItem('fingerprint_hash', murmur);
-        resolve(components);
-      });
-    }
-  });
+
 
 function App() {
-  console.log('Apply markup randomization: ' + process.env.REACT_APP_APPLY_MARKUP_RANDOMIZATION);
-  console.log('Apply fingerprinting: ' + process.env.REACT_APP_APPLY_FINGERPRINTING);
+
   const [cars, setCars] = useState([]);
   const [fingerprint, setFingerprint] = useState();
   const [isBot, setIsBot] = useState();
@@ -42,6 +30,24 @@ function App() {
   const [ip, setIP] = useState("");
   const [captchaSolved, setCaptchaSolved] = useState(false);
   const [captchaRequired, setCaptchaRequired] = useState(false);
+
+
+
+const [fingerprintHash, setFingerprintHash] = useState('');
+
+const getFingerprint = () =>
+new Promise(resolve => {
+  if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
+  {
+    fp.get(components => {
+      var values = components.map(function (component) { return component.value })
+      var murmur = fp.x64hash128(values.join(''), 31)
+      localStorage.setItem('fingerprint_hash', murmur);
+      setFingerprintHash(murmur);
+      resolve(components);
+    });
+  }
+});
 
 
   const getIpAddress = async () => {
@@ -152,9 +158,10 @@ function App() {
     const captchaToken = localStorage.getItem('captcha') || '';
     axios.get(API_URL + '/cars', {
       headers: {
-        'fingerprint': localStorage.getItem('fingerprint_hash') || '',
+        'fingerprint': fingerprintHash || '',
         'banrequest': ban_request,
-        'captcha': captchaToken || ''
+        'captcha': captchaToken || '',
+        'x-forwarded-for': ip || ''
     }
     })
     .then(res => {
@@ -176,7 +183,7 @@ function App() {
     })
     setFingerprint(process.env.REACT_APP_APPLY_FINGERPRINTING || false);
     getIpAddress();
-  }, [isBot, isLying, filledHoneypot, captchaSolved]);
+  }, [isBot, isLying, filledHoneypot, captchaSolved, fingerprintHash, ip]);
 
   return (
     <div className="App">
