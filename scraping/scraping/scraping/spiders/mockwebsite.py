@@ -9,12 +9,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from scrapy.utils.response import open_in_browser
 
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
+MOCKWEBSITE_URL = os.environ["MOCKWEBSITE_URL"]
+OPEN_PAGES = os.environ["OPEN_PAGES"]
+
 
 
 class MockwebsiteSpider(scrapy.Spider):
     name = "mockwebsite"
     allowed_domains = [""]
-    start_urls = ["http://localhost:3000"]
+    start_urls = [MOCKWEBSITE_URL]
 
     def read_current_table(self, driver, html_content):
         try:
@@ -69,7 +77,8 @@ class MockwebsiteSpider(scrapy.Spider):
                     car_color = ''.join(row.css("td:nth-child(5) div span::text").getall())
                     car_page = ''.join(row.css("td:nth-child(6) a::attr(href)").getall())
                     # Go to the car page for getting more info
-                    #driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
+                    if OPEN_PAGES == "true":
+                        driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
                     car = {
                         "make": car_make,
                         "model": car_model,
