@@ -31,7 +31,6 @@ export const getFingerprint = () =>
 function App() {
   console.log('Apply markup randomization: ' + process.env.REACT_APP_APPLY_MARKUP_RANDOMIZATION);
   console.log('Apply fingerprinting: ' + process.env.REACT_APP_APPLY_FINGERPRINTING);
-  const carJson = require('./MOCK_DATA.json');
   const [cars, setCars] = useState([]);
   const [fingerprint, setFingerprint] = useState();
   const [isBot, setIsBot] = useState();
@@ -39,6 +38,8 @@ function App() {
   const [isLying, setIsLying] = useState(false);
   const [filledHoneypot, setFilledHoneypot] = useState(false);
   const [ip, setIP] = useState("");
+  const [captchaSolved, setCaptchaSolved] = useState(false);
+  const [captchaRequired, setCaptchaRequired] = useState(false);
 
 
   const getIpAddress = async () => {
@@ -60,6 +61,10 @@ function App() {
     else
     {
       console.log('Captcha client submit was successful')
+      localStorage.setItem('captcha', value);
+      setCaptchaSolved(true);
+      // Reload page
+      window.location.reload();
 
     }
 
@@ -98,6 +103,17 @@ function App() {
           localStorage.setItem('isLying', true);
           // If User is lying or is a bot, we should send to our server the user hash and IP
           // to blacklist them temporarily, obligating the IP or Hash to solve a captcha
+          /*
+          axios.get('http://localhost:5000/', {
+            headers: {
+              'fingerprint': localStorage.getItem('fingerprint_hash') || '',
+              'banrequest': 'true'
+            }
+          }).catch
+          (err => {
+            console.log(err);
+          });
+          */
         }
     });
     });
@@ -127,10 +143,38 @@ function App() {
     const honeypot = (localStorage.getItem('honeypot_filled') === 'true') || false;
     setFilledHoneypot(honeypot);
     console.log('Honeypot filled: ' + honeypot);
-    setCars(carJson);
+
+  
+    let ban_request = (isBot || isLying || filledHoneypot) ? 'true' : 'false';
+    
+    const captchaToken = localStorage.getItem('captcha') || '';
+    axios.get('http://localhost:5000/cars', {
+      headers: {
+        'fingerprint': localStorage.getItem('fingerprint_hash') || '',
+        'banrequest': ban_request,
+        'captcha': captchaToken || ''
+    }
+    })
+    .then(res => {
+      
+      if(res.data.success === true)
+      setCars(res.data.data);
+      else
+      console.log('Failed to fetch data: ' + res.data.message);
+    }).catch(err => {
+      if(err.response.data.success === false)
+      {
+        if(err.response.data.data.ban === 'true')
+        {
+          setCaptchaRequired(true)
+          console.log('Captcha required')
+        }
+      }
+      console.log(err);
+    })
     setFingerprint(process.env.REACT_APP_APPLY_FINGERPRINTING || false);
     getIpAddress();
-  }, [carJson, cars]);
+  }, [isBot, isLying, filledHoneypot, captchaSolved]);
 
   return (
     <div className="App">
@@ -147,6 +191,7 @@ function App() {
           onChange={onChange}
           store={store}
           cars={cars}
+          captchaRequired={captchaRequired}
         />} />
         
        </Routes> 
@@ -155,12 +200,12 @@ function App() {
   );
 }
 
-const HomePage = ({isBot, isLying, filledHoneypot, onChange, store, cars}) => {
+const HomePage = ({isBot, isLying, filledHoneypot, onChange, store, cars, captchaRequired}) => {
   return (
     <div>
       <div>
           <h1>Cars for Sale</h1>
-             {process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (isBot || isLying || filledHoneypot) ? 
+             {process.env.REACT_APP_APPLY_CAPTCHA === 'true' && (captchaRequired) ? 
              <ReCAPTCHA
              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
              onChange={onChange}

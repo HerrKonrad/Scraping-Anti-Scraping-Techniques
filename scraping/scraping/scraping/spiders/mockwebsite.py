@@ -69,7 +69,7 @@ class MockwebsiteSpider(scrapy.Spider):
                     car_color = ''.join(row.css("td:nth-child(5) div span::text").getall())
                     car_page = ''.join(row.css("td:nth-child(6) a::attr(href)").getall())
                     # Go to the car page for getting more info
-                    driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
+                    #driver.execute_script('''window.open("''' + response.url + car_page + '''","_blank");''')
                     car = {
                         "make": car_make,
                         "model": car_model,
