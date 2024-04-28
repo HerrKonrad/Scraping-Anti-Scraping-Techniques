@@ -108,3 +108,21 @@ app.get('/cars', (req, res) => {
         message: "Successfully fetched data"
     });
 });
+
+app.get('/cars/:id', (req, res) => {
+    const id = req.params.id;
+    const car = data.find(car => car.id == id);
+    if(car){
+        res.json({
+            data: car,
+            success: true,
+            message: "Successfully fetched data"
+        });
+    }else{
+        res.json({
+            success: false,
+            message: "Car not found",
+            data: []
+        });
+    }
+});

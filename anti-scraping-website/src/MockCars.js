@@ -4,7 +4,21 @@ import {  useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { fetchData } from './reducers'; 
 import './hide.css'
+import { useParams } from 'react-router-dom';
 
+const CarPage = ({cars}) => {
+  const { carId } = useParams();
+
+
+  return (
+    <Container className="mt-5">
+      <h1> Car: {carId}</h1>
+      <p>Price: </p>
+      <p>VIN: </p>
+      <p>Color: </p>
+    </Container>
+  );
+};
 
 
 
@@ -109,7 +123,7 @@ const MockCars = ({ cars }) => {
             <td>{car.car_price}</td>
             <td>{car.car_vin}</td>
             <td>{car.car_color}</td>
-            <td><a href={'/' + index}>More info</a></td>
+            <td><a href={'/' + car.id}>More info</a></td>
           </tr>
         ))}
         </tbody>
@@ -183,4 +197,4 @@ const MockCars = ({ cars }) => {
   
 
 
-export default MockCars;
+export { MockCars, CarPage}
