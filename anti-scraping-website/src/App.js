@@ -11,8 +11,9 @@ import axios from "axios";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HoneypotPage  from './honeypot';
 
-import MockCars from './MockCars';
+import {MockCars, CarPage }from './MockCars';
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
@@ -181,6 +182,7 @@ new Promise(resolve => {
         {
           setCaptchaRequired(true)
           console.log('Captcha required')
+          setIsLoading(false);
         }
       }
       console.log(err);
@@ -189,6 +191,7 @@ new Promise(resolve => {
     getIpAddress();
   }, [isBot, isLying, filledHoneypot, captchaSolved, fingerprintHash, ip]);
 
+ 
   return (
     <div className="App">
     <BrowserRouter>
@@ -196,7 +199,7 @@ new Promise(resolve => {
         <Route path="/fake-page-1" element={<HoneypotPage />} />
         <Route path="/fake-page-2" element={<div>Ops... You're a bot!!!</div>} />
         <Route path="/fake-page-3" element={<div>Ops... You're a bot!!</div>} />
-        <Route path="/:carId" element={<div>Car Page</div>} />
+        <Route path="/:carId" element={<CarPage cars={cars} />} />
         <Route path="/" element={<HomePage 
           isBot={isBot}
           isLying={isLying}
