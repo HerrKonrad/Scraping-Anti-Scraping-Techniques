@@ -4,7 +4,7 @@ import { createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux'; 
 import rootReducer  from './reducers'; 
 import modifyDataMiddleware from './middleware'; 
-import fp, { get } from "fingerprintjs2";
+import fp from "fingerprintjs2";
 import { load } from '@fingerprintjs/botd'
 import ReCAPTCHA from "react-google-recaptcha";
 import axios from "axios";
@@ -13,7 +13,6 @@ import HoneypotPage  from './honeypot';
 
 import {MockCars, CarPage }from './MockCars';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'
 
@@ -38,8 +37,7 @@ const [fingerprintHash, setFingerprintHash] = useState('');
 
 const getFingerprint = () =>
 new Promise(resolve => {
-  if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
-  {
+  
     fp.get(components => {
       var values = components.map(function (component) { return component.value })
       var murmur = fp.x64hash128(values.join(''), 31)
@@ -47,19 +45,18 @@ new Promise(resolve => {
       setFingerprintHash(murmur);
       resolve(components);
     });
-  }
+  
 });
 
-
+/*
   const getIpAddress = async () => {
-    if(process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
-    { const res = await axios.get("https://api.ipify.org/?format=json");
+    const res = await axios.get("https://api.ipify.org/?format=json");
     if(res.data.ip !== null || res.data.ip !== undefined || res.data.ip !== '')
     setIP(res.data.ip);
     localStorage.setItem('ip', res.data.ip);
-    }
+    
   };
-
+*/
   function onChange(value) {
     console.log("Captcha value:", value);
     let captcha = value
@@ -69,17 +66,19 @@ new Promise(resolve => {
     }
     else
     {
-      console.log('Captcha client submit was successful')
+      console.log('Captcha client submit was successful');
       localStorage.setItem('captcha', value);
       setCaptchaSolved(true);
       // Reload page
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 0);
 
     }
 
   }
 
-  if(fingerprint && !identityChecked && process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')
+  if(fingerprint && !identityChecked)
   {
     // Get fingerprint then check if user is lying about browser
     getFingerprint()
@@ -110,19 +109,6 @@ new Promise(resolve => {
           setIsLying(true);
           console.log('User is lying identity')
           localStorage.setItem('isLying', true);
-          // If User is lying or is a bot, we should send to our server the user hash and IP
-          // to blacklist them temporarily, obligating the IP or Hash to solve a captcha
-          /*
-          axios.get('http://localhost:5000/', {
-            headers: {
-              'fingerprint': localStorage.getItem('fingerprint_hash') || '',
-              'banrequest': 'true'
-            }
-          }).catch
-          (err => {
-            console.log(err);
-          });
-          */
         }
     });
     });
@@ -151,45 +137,47 @@ new Promise(resolve => {
   useEffect(() => {
     const honeypot = (localStorage.getItem('honeypot_filled') === 'true') || false;
     setFilledHoneypot(honeypot);
-    console.log('Honeypot filled: ' + honeypot);
 
-  
-    let ban_request = (isBot || isLying || filledHoneypot) ? 'true' : 'false';
+    let ban_request = (((isBot || isLying) && process.env.REACT_APP_APPLY_FINGERPRINTING === 'true')|| filledHoneypot) ? 'true' : 'false';
     
     const captchaToken = localStorage.getItem('captcha') || '';
-    axios.get(API_URL + '/cars', {
-      headers: {
-        'fingerprint': fingerprintHash || '',
-        'banrequest': ban_request,
-        'captcha': captchaToken || '',
-        'x-forwarded-for': ip || ''
-    }
-    })
-    .then(res => {
-      
-      if(res.data.success === true)
-      {
-        setCars(res.data.data);
-        setIsLoading(false);
+    if(fingerprintHash !== '')
+    {
+      axios.get(API_URL + '/cars', {
+        headers: {
+          'fingerprint': fingerprintHash || '',
+          'banrequest': ban_request,
+          'captcha': captchaToken || ''
       }
-
-      else
-      console.log('Failed to fetch data: ' + res.data.message);
-    }).catch(err => {
-      if(err.response.data.success === false)
-      {
-        if(err.response.data.data.ban === 'true')
+      })
+      .then(res => {
+        
+        if(res.data.success === true)
         {
-          setCaptchaRequired(true)
-          console.log('Captcha required')
+          setCars(res.data.data);
           setIsLoading(false);
         }
-      }
-      console.log(err);
-    })
+  
+        else
+        console.log('Failed to fetch data: ' + res.data.message);
+      }).catch(err => {
+        if(err.response.data.success === false)
+        {
+          if(err.response.data.data.ban === 'true')
+          {
+            setCaptchaRequired(true)
+            setIP(err.response.data.data.ip_address);
+            console.log('Captcha required')
+            setIsLoading(false);
+          }
+        }
+        console.log(err);
+      })
+    }
+    
     setFingerprint(process.env.REACT_APP_APPLY_FINGERPRINTING || false);
-    getIpAddress();
-  }, [isBot, isLying, filledHoneypot, captchaSolved, fingerprintHash, ip]);
+    //getIpAddress();
+  }, [isBot, isLying, filledHoneypot, captchaSolved, fingerprintHash]);
 
  
   return (
@@ -224,7 +212,7 @@ const HomePage = ({ onChange, store, cars, captchaRequired, isLoading, ip, hash 
     <div>
       <div>
         <h1>Cars for Sale</h1>
-        {isLoading ? (
+        {isLoading || hash === "" ? (
           <div className="spinner-border" role="status"></div>
         ) : (
           process.env.REACT_APP_APPLY_CAPTCHA === 'true' && captchaRequired ? (

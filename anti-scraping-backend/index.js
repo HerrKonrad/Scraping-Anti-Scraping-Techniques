@@ -71,7 +71,7 @@ const userIdentifyVerification = (req, res, next) => {
             {
                 success: false,
                 message: 'You were banned, please solve the captcha to continue',
-                data: {ban: 'true'}
+                data: {ban: 'true',  ip_address: ip}
             }
         )
         return;
@@ -82,7 +82,7 @@ const userIdentifyVerification = (req, res, next) => {
         res.status(403).send({
             success: false,
             message:  'You are blacklisted temporarily, please solve the captcha to continue',
-            data: {ban: 'true'}
+            data: {ban: 'true', ip_address: ip}
     });
         return;
     }
